@@ -1,6 +1,6 @@
 defmodule Crud.Router do
   use Plug.Router
-  alias Crud.Store, as: Store
+  alias Crud.Repository, as: Repository
 
   plug(:match)
 
@@ -14,14 +14,12 @@ defmodule Crud.Router do
   plug(:dispatch)
 
   get "/" do
-    Store.inc
-    params = Store.get_state
-    IO.inspect params
-    # IO.inspect :ets.lookup(table(), :name)
-    send_resp(conn, 200, "hello")
+    params = Repository.as_entity_list()
+    send_resp(conn, 200, Poison.encode!(params))
   end
 
   post "/" do
+    Repository.store(2)
     # :ets.insert(table(), {:name, conn.body_params["name"]})
     send_resp(conn, 200, Poison.encode!(conn.body_params))
   end
