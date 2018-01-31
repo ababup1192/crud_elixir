@@ -1,7 +1,6 @@
 defmodule Crud.Router do
   use Plug.Router
-
-  # JSON のパースを行う
+  alias Crud.Store, as: Store
 
   plug(:match)
 
@@ -14,10 +13,16 @@ defmodule Crud.Router do
 
   plug(:dispatch)
 
-  post "/" do
-    IO.inspect(conn.body_params["name"])
+  get "/" do
+    Store.inc
+    params = Store.get_state
+    IO.inspect params
+    # IO.inspect :ets.lookup(table(), :name)
+    send_resp(conn, 200, "hello")
+  end
 
-    conn
-    |> send_resp(200, conn.body_params["name"])
+  post "/" do
+    # :ets.insert(table(), {:name, conn.body_params["name"]})
+    send_resp(conn, 200, Poison.encode!(conn.body_params))
   end
 end

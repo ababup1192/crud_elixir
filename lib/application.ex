@@ -3,10 +3,12 @@ defmodule Crud.Application do
 
   def start(_type, _args) do
     children = [
-      Plug.Adapters.Cowboy.child_spec(:http, Crud.Router, [], [port: 8000]),
+      Plug.Adapters.Cowboy.child_spec(:http, Crud.Router, [], port: 8000),
+      Supervisor.Spec.worker(Crud.Store, [0])
     ]
 
     opts = [strategy: :one_for_one, name: Crud.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end
+
