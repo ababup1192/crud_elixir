@@ -4,7 +4,7 @@ defmodule Crud.Application do
   def start(_type, _args) do
     children = [
       Plug.Adapters.Cowboy.child_spec(:http, Crud.Router, [], port: 8000),
-      Supervisor.Spec.worker(Crud.Repository, [0])
+      Supervisor.Spec.worker(Crud.Repository, [])
     ]
 
     opts = [strategy: :one_for_one, name: Crud.Supervisor]

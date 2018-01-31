@@ -1,20 +1,26 @@
 defmodule Crud.Repository do
   use GenServer
 
-  def start_link(), do: start_link(0)
-
-  def start_link(init_num) do
-    table = :ets.new(:temp_table, [:set, :public])
-    :ets.insert(table, {:users, []})
-    GenServer.start_link(__MODULE__, %{table: table}, name: __MODULE__)
+  def start_link() do
+    :mnesia.start()
+    :mnesia.create_table(Person, attributes: [:id, :name, :job])
+    GenServer.start_link(__MODULE__, %{id: 1}, name: __MODULE__)
   end
 
   def as_entity_list() do
     GenServer.call(__MODULE__, :as_entity_list)
   end
 
-  def store(user) do
-    GenServer.cast(__MODULE__, {:store, user})
+  def store(person) do
+    GenServer.cast(__MODULE__, {:store, person})
+  end
+
+  def update(person) do
+    GenServer.cast(__MODULE__, {:update, person})
+  end
+
+  def delete(id) do
+    GenServer.cast(__MODULE__, {:delete, id})
   end
 
   def kill do
@@ -23,14 +29,29 @@ defmodule Crud.Repository do
 
   ####################
   def handle_call(:as_entity_list, _from, state) do
-    {:reply, to_users_map(:ets.lookup(state.table, :users)[:users]), state}
+    persons = :mnesia.dirty_match_object({Person, :_, :_, :_})
+
+    persons_map =
+      Enum.map(persons, fn {Person, id, name, job} -> %{id: id, name: name, job: job} end)
+
+    {:reply, persons_map, state}
   end
 
-  def handle_cast({:store, user}, state) do
-    users = :ets.lookup(state.table, :users)[:users]
-    :ets.insert(state.table, {:users, users ++ [user]})
+  def handle_cast({:store, person}, state) do
+    :mnesia.dirty_write({Person, state.id, person["name"], person["job"]})
+
+    {:noreply, %{id: state.id + 1}}
+  end
+
+  def handle_cast({:update, person}, state) do
+    :mnesia.dirty_write({Person, person["id"], person["name"], person["job"]})
+
     {:noreply, state}
   end
 
-  def to_users_map(users), do: %{"users": users}
+  def handle_cast({:delete, id}, state) do
+    :mnesia.dirty_delete({Person, id})
+
+    {:noreply, state}
+  end
 end
