@@ -1,9 +1,14 @@
 defmodule Crud.Repository do
   use GenServer
 
+  def init(args) do
+    {:ok, args}
+  end
+
   def start_link() do
     :mnesia.start()
     :mnesia.create_table(Person, attributes: [:id, :name, :job])
+    :mnesia.add_table_index(Person, :id)
     GenServer.start_link(__MODULE__, %{id: 1}, name: __MODULE__)
   end
 
@@ -15,8 +20,8 @@ defmodule Crud.Repository do
     GenServer.cast(__MODULE__, {:store, person})
   end
 
-  def update(person) do
-    GenServer.cast(__MODULE__, {:update, person})
+  def update(id, person) do
+    GenServer.cast(__MODULE__, {:update, id, person})
   end
 
   def delete(id) do
@@ -33,6 +38,7 @@ defmodule Crud.Repository do
 
     persons_map =
       Enum.map(persons, fn {Person, id, name, job} -> %{id: id, name: name, job: job} end)
+      |> Enum.sort_by(fn person -> person.id end)
 
     {:reply, persons_map, state}
   end
@@ -43,8 +49,8 @@ defmodule Crud.Repository do
     {:noreply, %{id: state.id + 1}}
   end
 
-  def handle_cast({:update, person}, state) do
-    :mnesia.dirty_write({Person, person["id"], person["name"], person["job"]})
+  def handle_cast({:update, id, person}, state) do
+    :mnesia.dirty_write({Person, id, person["name"], person["job"]})
 
     {:noreply, state}
   end

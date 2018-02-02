@@ -24,6 +24,7 @@ defmodule Crud.MixProject do
     [
       {:cowboy, "~> 1.1.2"},
       {:plug, "~> 1.4.3"},
+      {:cors_plug, "~> 1.2"},
       {:poison, "~> 3.1"}
     ]
   end
